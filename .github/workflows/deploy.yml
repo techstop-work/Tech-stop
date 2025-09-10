@@ -54,4 +54,5 @@ jobs:
             sudo supervisorctl restart all
 
             echo "✅ Deployment complete!"
+          EOF
 
