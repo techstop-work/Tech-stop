@@ -26,6 +26,8 @@ jobs:
 
             echo "→ Changing to deployment directory..."
             cd ${{ secrets.DEPLOY_PATH }}
+            git config --global --add safe.directory ${{ secrets.DEPLOY_PATH }}
+
 
             echo "→ Pulling latest changes from Git..."
             git pull origin main
