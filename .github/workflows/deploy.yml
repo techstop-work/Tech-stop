@@ -3,7 +3,7 @@ name: Deploy Laravel App via SSH
 on:
   push:
     branches:
-      - main  # or your deployment branch
+      - main
 
 jobs:
   deploy:
@@ -14,27 +14,44 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up SSH
+      - name: Set up SSH Agent
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Copy files to server
+      - name: Deploy via SSH
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'EOF'
+            set -e
+
+            echo "→ Changing to deployment directory..."
             cd ${{ secrets.DEPLOY_PATH }}
 
-            echo "→ Pulling latest changes..."
+            echo "→ Pulling latest changes from Git..."
             git pull origin main
 
             echo "→ Installing composer dependencies..."
             composer install --no-interaction --prefer-dist --optimize-autoloader
+
+            echo "→ Setting correct permissions..."
+            sudo chown -R www-data:www-data ${{ secrets.DEPLOY_PATH }}
+            sudo find ${{ secrets.DEPLOY_PATH }}/storage -type d -exec chmod 775 {} \;
+            sudo find ${{ secrets.DEPLOY_PATH }}/storage -type f -exec chmod 664 {} \;
+            sudo find ${{ secrets.DEPLOY_PATH }}/bootstrap/cache -type d -exec chmod 775 {} \;
+            sudo find ${{ secrets.DEPLOY_PATH }}/bootstrap/cache -type f -exec chmod 664 {} \;
 
             echo "→ Running Laravel optimizations..."
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
 
-            echo "→ Restarting PHP-FPM..."
+            echo "→ Reloading PHP-FPM..."
             sudo systemctl reload php8.3-fpm
+
+            echo "→ Restarting Supervisor queue workers..."
+            sudo supervisorctl reread
+            sudo supervisorctl update
+            sudo supervisorctl restart all
+
+            echo "✅ Deployment complete!"
 EOF
