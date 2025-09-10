@@ -34,7 +34,7 @@ jobs:
 
             echo "→ Installing composer dependencies..."
             composer install --no-interaction --prefer-dist --optimize-autoloader
-
+ 
             echo "→ Setting correct permissions..."
             sudo chown -R www-data:www-data ${{ secrets.DEPLOY_PATH }}
             sudo find ${{ secrets.DEPLOY_PATH }}/storage -type d -exec chmod 775 {} \;
