@@ -41,7 +41,7 @@ jobs:
             sudo find ${{ secrets.DEPLOY_PATH }}/storage -type f -exec chmod 664 {} \;
             sudo find ${{ secrets.DEPLOY_PATH }}/bootstrap/cache -type d -exec chmod 775 {} \;
             sudo find ${{ secrets.DEPLOY_PATH }}/bootstrap/cache -type f -exec chmod 664 {} \;
-
+ 
             echo "→ Running Laravel optimizations..."
             php artisan config:cache
             php artisan route:cache
